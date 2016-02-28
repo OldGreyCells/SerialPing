@@ -3,7 +3,7 @@
 This library was first written for the [nearmiss-o-meter](https://github.com/OldGreyCells/nearmiss-o-meter) so serial sonars could be 'dropped' into the main Arduino code.
 
 ## FEATURES:
-- Partially API compatible with the NewPing library.
+- Partially API compatible with the [NewPing](https://bitbucket.org/teckel12/arduino-new-ping/wiki/Home) library.
 - Currently supports two serial ultrasonic sonars:
   - http://en.dypsensor.com/products/&pmcId=42.html
   - https://www.google.co.uk/search?q=US-100+Ultrasonic+Distance+Sensor+Module
