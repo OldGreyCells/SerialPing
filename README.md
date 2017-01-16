@@ -22,6 +22,6 @@ This library was first written for the [nearmiss-o-meter](https://github.com/Old
 - ```sonar.ping()``` - Send a ping and get the echo time (in cm) as a result. 
 - ```sonar.ping_in()``` - Send a ping and get the distance in whole inches.
 - ```sonar.ping_cm()``` - Send a ping and get the distance in whole centimeters.
-- ```sonar.ping_median(iterations)``` - Do multiple pings (default=5), discard out of range pings and return median in cm. 
+- ```sonar.ping_median(iterations, timeout)``` - Do multiple pings (default=5), discard out of range pings, stop iterations if longer than timeout and return median in cm. 
 - ```sonar.convert_in(cm)``` - Convert from cm to inches (rounds to nearest inch).
 - ```sonar.convert_cm(cm)``` - convert cm to cm(!). For NewPing API compatability only.

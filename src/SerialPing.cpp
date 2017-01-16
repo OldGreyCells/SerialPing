@@ -4,6 +4,7 @@
 SerialPing::SerialPing(Stream& s, unsigned int max_cm_distance, unsigned int sensor_id): serial(s) {
   maxDistance = min(max_cm_distance, (unsigned int) MAX_SENSOR_DISTANCE);
   sensorId = sensor_id;
+  //maxWait=PING_OVERHEAD+(maxDistance*58);
 }
 
 /**
@@ -23,13 +24,15 @@ unsigned int SerialPing::ping() {
 }
 
 /**
- * Return median cm from <it> number of pings.
+ * Return median cm from <it> number of pings within <timeout>.
  * Used with kind permission of Tim Eckel (creator of NewPing)
  */
-unsigned int SerialPing::ping_median(uint8_t it) {
+unsigned int SerialPing::ping_median(uint8_t it, uint16_t timeout) {
   unsigned int cm[it], last;
   uint8_t j, i = 0;
   unsigned long t;
+  unsigned long start = millis();
+
   //unsigned int actualLoops = 0;
   cm[0] = NO_ECHO;
 
@@ -46,10 +49,12 @@ unsigned int SerialPing::ping_median(uint8_t it) {
       i++;                       // Move to next ping.
     } else it--;                 // Ping out of range, skip and don't include as part of median.
 
-    if (i < it && micros() - t < PING_MEDIAN_DELAY)
+    //Break loop if (usually first) ping takes too long
+    if ( millis() - start > timeout ) break;
+    if (i < it && micros() - t < PING_MEDIAN_DELAY) 
       delay((PING_MEDIAN_DELAY + t - micros()) / 1000); // Millisecond delay between pings.
   }
-  return (cm[it >> 1]); // Return the ping distance median.
+  return (cm[i >> 1]); // Return the ping distance median.
 }
 
 
@@ -82,43 +87,21 @@ unsigned int SerialPing::convert_in(unsigned int cm) {
 
 
 unsigned int SerialPing::pingUS100() {
-  boolean waitingForFrame = false;
-  boolean haveStartOfFrame = false;
-  //Serial.print("ping: ");
-  //if (!waitingForFrame) {
-  pingStart = millis();
-  serial.write(0x55);
-  waitingForFrame = true;
-  while (waitingForFrame) {
-    if ( millis() - pingStart > 70) {
-      //Serial.println("Waited too long for echo");
-      waitingForFrame = false;
-      return NO_ECHO;
-    }
+    byte serialData[3];
+    //Clear down any byte(s) left in the buffer
     while (serial.available()) {
       byte b = serial.read();
-      if ( b != -1) {
-        switch (byteCounter) {
-          case 0:
-            dataH = b;
-            break;
-          case 1:
-            dataL = b;
-            int cm = ((dataH * 256) + dataL) / 10;
-            waitingForFrame = false;
-            byteCounter = 0;
-            serial.flush();
-            return (cm > maxDistance) ? NO_ECHO : cm;
-            //return cm;
-        }
-        byteCounter++;
-        if (byteCounter > 50 ) {
-          waitingForFrame = false;
-          return NO_ECHO;
-        }
-      }
     }
-  }
+    serial.write(0x55);
+    serial.setTimeout(95);
+    if ( serial.readBytes(serialData, 2) > 0 ) {
+        int cm = ((serialData[0] * 256) + serialData[1]) / 10;
+        memset(serialData, 0, sizeof(serialData));   // Clear contents of Buffer
+        serial.flush();
+        return (cm > maxDistance) ? NO_ECHO : cm;
+    } else {
+        return NO_ECHO;
+    }
 }
 
 unsigned int SerialPing::pingME007ULS() {
@@ -131,7 +114,7 @@ unsigned int SerialPing::pingME007ULS() {
     waitingForFrame = true;
     while (waitingForFrame) {
       //Serial.println(millis() - pingStart);
-      if ( millis() - pingStart > 70) {
+      if ( millis() - pingStart > 95 ) { 
         //Serial.println("Waited too long for echo");
         waitingForFrame = false;
         return NO_ECHO; 
@@ -147,11 +130,11 @@ unsigned int SerialPing::pingME007ULS() {
             switch (byteCounter) {
               case 1:
                 dataH = b;
-                //Serial.println(dataH, HEX);
+                Serial.println(dataH, HEX);
                 break;
               case 2:
                 dataL = b;
-                //Serial.println(dataL, HEX);
+                Serial.println(dataL, HEX);
                 break;
               case 3:
                 //tempH = b;

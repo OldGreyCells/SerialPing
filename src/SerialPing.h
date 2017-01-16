@@ -1,5 +1,5 @@
 /**
- * SerialPing Library - v0.1 - 24/02/2016
+ * SerialPing Library - v0.2 - 17/01/2017
  *
  * AUTHOR/LICENSE:
  * Created by @greycells - oldgreycells@gmail.com
@@ -45,8 +45,9 @@
 #define SerialPing_H
 #include <Arduino.h>
 #define NO_ECHO 0
+#define PING_OVERHEAD 1500
 #define MAX_SENSOR_DISTANCE 500  // Maximum sensor distance can be as high as 500cm, no reason to wait for ping longer than sound takes to 
-#define PING_MEDIAN_DELAY 29000  // Microsecond delay between pings in the ping_median method. Default=29000
+#define PING_MEDIAN_DELAY 100 //29000  // Microsecond delay between pings in the ping_median method. Default=29000
 #define SONAR_US_100 1
 #define SONAR_ME007_ULS 2
 
@@ -59,9 +60,9 @@ class SerialPing {
      */
     unsigned int ping();
     /**
-     * Return median cm from <it> number of pings.
+     * Return median cm from <it> number of pings within <timeout>.
      */
-    unsigned int ping_median(uint8_t it = 5);
+    unsigned int ping_median(uint8_t it = 5, uint16_t timeout = 200);
     /**
      * Alias for ping() for NewPing API compatibility.
      */
@@ -85,6 +86,7 @@ class SerialPing {
     unsigned int pingUS100();
     unsigned int pingME007ULS();
     unsigned int maxDistance = MAX_SENSOR_DISTANCE;
+    //unsigned long maxWait = 70000;
     unsigned int sensorId = SONAR_US_100;
     unsigned long pingStart = 0;
     unsigned long pingMedianDelay = PING_MEDIAN_DELAY;
